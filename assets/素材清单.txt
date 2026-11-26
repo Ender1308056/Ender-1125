@@ -1,0 +1,10 @@
+美术资产导入位（放在本目录，文件名保持一致即可自动替换程序化占位绘制）
+
+character.png      角色贴图，建议透明底，约 48x52 px
+road-fill.png      道路填充纹理，可平铺
+road-border.png    道路边框纹理，可平铺
+marker-tap.png     短按三角标识，建议透明底，约 34x34 px
+marker-hold.png    长按三角标识（起始与结束共用），建议透明底，约 34x34 px
+bg.png             背景纹理，可平铺
+
+未放入时使用 Canvas 程序化绘制：火柴人 + 粗线条道路 + 三角形标识。
