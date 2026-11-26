@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>节奏探索 · Rhythm Pathfinder</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="app">
+
+  <!-- ============ 左侧参数面板 ============ -->
+  <aside class="panel">
+    <div class="brand">
+      <div class="brand-mark">▲</div>
+      <div>
+        <h1>节奏探索</h1>
+        <p>RHYTHM PATHFINDER · PROTOTYPE</p>
+      </div>
+    </div>
+
+    <div class="panel-scroll">
+
+      <section class="group">
+        <h2>01 / 节拍设置</h2>
+
+        <label class="field">
+          <span class="field-label">BPM <b id="bpmValue">120</b></span>
+          <input type="range" id="bpm" min="60" max="200" step="1" value="120">
+        </label>
+
+        <label class="field">
+          <span class="field-label">短按判定频率</span>
+          <select id="subdiv">
+            <option value="whole">一分音符 / 全音符（4 拍一次）</option>
+            <option value="half">二分音符（2 拍一次）</option>
+            <option value="quarter" selected>四分音符（1 拍一次）</option>
+            <option value="eighth">八分音符（半拍一次）</option>
+          </select>
+        </label>
+
+        <div class="field">
+          <span class="field-label">判定窗口（随频率自动收紧）</span>
+          <div class="readout">
+            <span>PERFECT <b id="perfectWindow">±90 ms</b></span>
+            <span>GOOD <b id="goodWindow">±180 ms</b></span>
+          </div>
+        </div>
+      </section>
+
+      <section class="group">
+        <h2>02 / 道路生成</h2>
+
+        <div class="field">
+          <span class="field-label">拐弯间隔（小节，随机抽取）</span>
+          <div class="chips" id="turnBars">
+            <button type="button" class="chip active" data-bars="2">2</button>
+            <button type="button" class="chip active" data-bars="4">4</button>
+            <button type="button" class="chip active" data-bars="6">6</button>
+            <button type="button" class="chip active" data-bars="8">8</button>
+          </div>
+          <p class="hint">拐弯只取垂直方向，禁止 180° 掉头。</p>
+        </div>
+
+        <label class="field">
+          <span class="field-label">长按出现概率 <b id="holdValue">22%</b></span>
+          <input type="range" id="holdChance" min="0" max="60" step="1" value="22">
+        </label>
+
+        <label class="checkline">
+          <input type="checkbox" id="forks" checked>
+          <span>允许分岔路口（支路为死路，无汇入）</span>
+        </label>
+
+        <div class="field">
+          <span class="field-label">方向键位</span>
+          <select id="keyScheme">
+            <option value="both" selected>WASD + 方向键（推荐）</option>
+            <option value="wasd">仅 WASD</option>
+            <option value="arrows">仅 ↑ ↓ ← →</option>
+          </select>
+          <div class="keygrid">
+            <span class="keycap">W</span><span class="keycap">↑</span>
+            <span class="keycap">A</span><span class="keycap">S</span><span class="keycap">D</span>
+            <span class="keycap">←</span><span class="keycap">↓</span><span class="keycap">→</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="group">
+        <h2>03 / 控制</h2>
+        <div class="buttons">
+          <button id="startBtn" class="btn primary">▶ 开始 / 重新生成</button>
+          <button id="pauseBtn" class="btn">⏸ 暂停</button>
+        </div>
+        <label class="checkline">
+          <input type="checkbox" id="sound" checked>
+          <span>节拍器声音</span>
+        </label>
+        <label class="checkline">
+          <input type="checkbox" id="showRail" checked>
+          <span>显示判定轨道</span>
+        </label>
+      </section>
+
+      <section class="group art">
+        <h2>04 / 美术资产位</h2>
+        <p class="hint">当前为程序化占位绘制。将素材放入 <code>assets/</code> 后自动替换：</p>
+        <ul>
+          <li><code>character.png</code> — 角色</li>
+          <li><code>road-fill.png</code> / <code>road-border.png</code> — 道路</li>
+          <li><code>marker-tap.png</code> / <code>marker-hold.png</code> — 三角标识</li>
+          <li><code>bg.png</code> — 背景纹理</li>
+        </ul>
+      </section>
+
+    </div>
+  </aside>
+
+  <!-- ============ 右侧游戏区 ============ -->
+  <main class="stage">
+    <header class="hud">
+      <div class="hud-item"><span>SCORE</span><b id="score">0</b></div>
+      <div class="hud-item"><span>COMBO</span><b id="combo">0</b></div>
+      <div class="hud-item"><span>ACCURACY</span><b id="accuracy">—</b></div>
+      <div class="hud-item"><span>BAR / BEAT</span><b id="barBeat">0 : 1</b></div>
+      <div class="status" id="status">READY</div>
+    </header>
+
+    <div class="canvas-wrap">
+      <canvas id="game"></canvas>
+      <div class="overlay" id="overlay">
+        <div class="overlay-card">
+          <div class="overlay-symbol">▲ ▲ ▲</div>
+          <h2 id="overlayTitle">节奏探索</h2>
+          <p id="overlayDesc">跟随三角标识按下方向键。实心三角 = 短按；虚线连接 = 长按至结束三角。</p>
+          <button id="overlayBtn" class="btn primary">▶ 开始</button>
+        </div>
+      </div>
+      <div class="corner corner-tl">┌─ WORLD VIEW ─────────────┐</div>
+      <div class="corner corner-bl">└──────────────────────────┘</div>
+    </div>
+
+    <div class="rail-wrap" id="railWrap">
+      <div class="rail-label">判定轨道 <span>JUDGMENT LINE ┃</span></div>
+      <canvas id="rail"></canvas>
+    </div>
+
+    <footer class="footer">
+      <span>短按：三角处按下方向键</span>
+      <span>长按：按住方向键直到虚线末端的三角</span>
+      <span>禁止反向拐弯</span>
+    </footer>
+  </main>
+</div>
+
+<script src="js/game.js"></script>
+</body>
+</html>
